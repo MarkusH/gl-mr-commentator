@@ -4,8 +4,9 @@ use std::io::Read;
 
 use gitlab::api::projects::merge_requests::notes;
 use gitlab::api::{self, users, Query};
-use gitlab::Gitlab;
 use serde::Deserialize;
+
+mod utils;
 
 #[derive(Debug, Deserialize, PartialEq)]
 struct User {
@@ -26,8 +27,7 @@ fn main() {
     let comment_mark: String =
         env::var("COMMENTATOR_MARK").unwrap_or("gl-mr-commentator".to_string());
     let mr_id: u64 = env::var("CI_MERGE_REQUEST_IID").unwrap().parse().unwrap();
-    let token = env::var("GITLAB_TOKEN").unwrap();
-    let client = Gitlab::new("gitlab.com", token).unwrap();
+    let client = utils::get_client();
 
     let marker = format!("<!-- {} -->", comment_mark);
     println!("Merge request marker is '{}'", marker);
@@ -39,7 +39,7 @@ fn main() {
         + r#"
 ---
 
-This comment was my by the [GitLab Merge Request Commentator](https://github.com/MarkusH/gl-mr-commentator)."#;
+This comment was made by the [GitLab Merge Request Commentator](https://github.com/MarkusH/gl-mr-commentator)."#;
 
     let endpoint = users::CurrentUser::builder().build().unwrap();
     let current_user: User = endpoint.query(&client).unwrap();
