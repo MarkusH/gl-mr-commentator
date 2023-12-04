@@ -27,27 +27,35 @@ fn ensure_branch_exists(client: &Gitlab, project_id: u64, branch_name: &String) 
         .branch(branch_name)
         .build()
         .unwrap();
-    let branch: Branch = endpoint.query(client).unwrap_or_else(|_| {
-        print!(
-            "Creating branch '{}' in project {} ...",
-            branch_name, project_id
-        );
-        let endpoint = branches::CreateBranch::builder()
-            .project(project_id)
-            .branch(branch_name)
-            .ref_("main")
-            .build()
-            .unwrap();
-        let _: () = api::ignore(endpoint).query(client).unwrap();
-        let endpoint = branches::Branch::builder()
-            .project(project_id)
-            .branch(branch_name)
-            .build()
-            .unwrap();
-        let branch: Branch = endpoint.query(client).unwrap();
-        branch
-    });
-    println!("Found branch '{}' in project {}.", branch_name, project_id);
+    let branch: Branch = match endpoint.query(client) {
+        Ok(b) => {
+            println!(
+                "Branch '{}' exists in project {} ...",
+                branch_name, project_id
+            );
+            b
+        }
+        Err(_) => {
+            println!(
+                "Creating branch '{}' in project {} ...",
+                branch_name, project_id
+            );
+            let endpoint = branches::CreateBranch::builder()
+                .project(project_id)
+                .branch(branch_name)
+                .ref_("main")
+                .build()
+                .unwrap();
+            let _: () = api::ignore(endpoint).query(client).unwrap();
+            let endpoint = branches::Branch::builder()
+                .project(project_id)
+                .branch(branch_name)
+                .build()
+                .unwrap();
+            let branch: Branch = endpoint.query(client).unwrap();
+            branch
+        }
+    };
     branch
 }
 
@@ -73,6 +81,7 @@ fn update_file(
         .project(project_id)
         .branch(branch_name)
         .action(action)
+        .commit_message("chore: Update files")
         .build()
         .unwrap();
     let _: () = api::ignore(endpoint).query(client).unwrap();
@@ -104,11 +113,15 @@ fn ensure_merge_request_is_open(
 
     for merge_request in open_merge_requests.iter() {
         if merge_request.title.eq(title) {
+            println!(
+                "Found merge request '{}' from branch '{}' in project {} ...",
+                merge_request.title, branch_name, project_id
+            );
             return merge_request.clone();
         }
     }
 
-    print!(
+    println!(
         "Creating merge request '{}' from branch '{}' in project {} ...",
         title, branch_name, project_id
     );
