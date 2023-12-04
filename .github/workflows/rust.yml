@@ -23,5 +23,5 @@ jobs:
       with:
         name: gltools
         path: |
-          target/release/commentator
-          target/release/
+          target/release/gltools-commentator
+          target/release/gltools-committer

@@ -11,10 +11,10 @@ serde = { version = "1", features = ["derive"] }
 
 
 [[bin]]
-name = "commentator"
+name = "gltools-commentator"
 path = "src/commentator.rs"
 
 
 [[bin]]
-name = "committer"
+name = "gltools-committer"
 path = "src/committer.rs"
